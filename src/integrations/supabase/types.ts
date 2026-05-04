@@ -14,7 +14,254 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      checkins: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          messages: Json
+          summary: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string
+          messages?: Json
+          summary?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          messages?: Json
+          summary?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      credibility_events: {
+        Row: {
+          category: string
+          created_at: string
+          delta: number
+          id: string
+          note: string | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          delta: number
+          id?: string
+          note?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          delta?: number
+          id?: string
+          note?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      patterns: {
+        Row: {
+          created_at: string
+          data: Json | null
+          detail: string | null
+          id: string
+          kind: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json | null
+          detail?: string | null
+          id?: string
+          kind?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json | null
+          detail?: string | null
+          id?: string
+          kind?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          focus_areas: string[] | null
+          id: string
+          name: string | null
+          onboarded: boolean
+          sleep_time: string | null
+          updated_at: string
+          wake_time: string | null
+        }
+        Insert: {
+          created_at?: string
+          focus_areas?: string[] | null
+          id: string
+          name?: string | null
+          onboarded?: boolean
+          sleep_time?: string | null
+          updated_at?: string
+          wake_time?: string | null
+        }
+        Update: {
+          created_at?: string
+          focus_areas?: string[] | null
+          id?: string
+          name?: string | null
+          onboarded?: boolean
+          sleep_time?: string | null
+          updated_at?: string
+          wake_time?: string | null
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          energy: Database["public"]["Enums"]["task_energy"]
+          icon: string | null
+          id: string
+          priority: Database["public"]["Enums"]["task_priority"]
+          scheduled_for: string
+          sort_order: number
+          starred: boolean
+          status: Database["public"]["Enums"]["task_status"]
+          title: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          energy?: Database["public"]["Enums"]["task_energy"]
+          icon?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["task_priority"]
+          scheduled_for?: string
+          sort_order?: number
+          starred?: boolean
+          status?: Database["public"]["Enums"]["task_status"]
+          title: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          energy?: Database["public"]["Enums"]["task_energy"]
+          icon?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["task_priority"]
+          scheduled_for?: string
+          sort_order?: number
+          starred?: boolean
+          status?: Database["public"]["Enums"]["task_status"]
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      weekly_debriefs: {
+        Row: {
+          ai_suggestion: string | null
+          biggest_blocker: string | null
+          completed: number
+          completion_rate: number
+          created_at: string
+          daily_rates: Json | null
+          id: string
+          skipped: number
+          top_win: string | null
+          user_id: string
+          week_end: string
+          week_start: string
+        }
+        Insert: {
+          ai_suggestion?: string | null
+          biggest_blocker?: string | null
+          completed?: number
+          completion_rate?: number
+          created_at?: string
+          daily_rates?: Json | null
+          id?: string
+          skipped?: number
+          top_win?: string | null
+          user_id: string
+          week_end: string
+          week_start: string
+        }
+        Update: {
+          ai_suggestion?: string | null
+          biggest_blocker?: string | null
+          completed?: number
+          completion_rate?: number
+          created_at?: string
+          daily_rates?: Json | null
+          id?: string
+          skipped?: number
+          top_win?: string | null
+          user_id?: string
+          week_end?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
+      why_answers: {
+        Row: {
+          created_at: string
+          detail: string | null
+          id: string
+          reason: string
+          task_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          reason: string
+          task_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          reason?: string
+          task_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "why_answers_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +270,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      task_energy: "high" | "medium" | "low"
+      task_priority: "high" | "medium" | "low"
+      task_status: "pending" | "done" | "skipped"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +399,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      task_energy: ["high", "medium", "low"],
+      task_priority: ["high", "medium", "low"],
+      task_status: ["pending", "done", "skipped"],
+    },
   },
 } as const
