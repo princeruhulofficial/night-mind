@@ -21,6 +21,7 @@ import Adjustment from "./pages/app/Adjustment";
 import Reminder from "./pages/app/Reminder";
 import WeeklyDebrief from "./pages/app/WeeklyDebrief";
 import Profile from "./pages/app/Profile";
+import Leaderboard from "./pages/app/Leaderboard";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ const App = () => (
                 <Route path="/adjustment" element={<Adjustment />} />
                 <Route path="/reminder" element={<Reminder />} />
                 <Route path="/debrief" element={<WeeklyDebrief />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />
