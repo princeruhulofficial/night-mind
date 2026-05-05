@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { todayISO, formatDuration } from "@/lib/format";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { TaskIconTile } from "@/components/app/TaskIconTile";
 
 const FILTERS = ["All", "High", "Medium", "Low"] as const;
 type Filter = typeof FILTERS[number];
@@ -16,6 +17,17 @@ export default function Tasks() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [filter, setFilter] = useState<Filter>("All");
+
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel(`tasks-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "tasks", filter: `user_id=eq.${user.id}` }, () => {
+        qc.invalidateQueries({ queryKey: ["tasks"] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user, qc]);
 
   const { data: tasks = [], isLoading } = useQuery({
     queryKey: ["tasks", "today", user?.id],
@@ -123,6 +135,7 @@ function TaskRow({ t, active, onToggle, onSkip }: any) {
         <button onClick={onToggle} aria-label="Toggle done" className={`h-6 w-6 rounded-full border-2 grid place-items-center transition ${done ? "bg-gradient-purple border-transparent" : "border-muted-foreground"}`}>
           {done && <Check className="h-3.5 w-3.5 text-white" />}
         </button>
+        <TaskIconTile icon={t.icon} size={42} />
         <div className="flex-1 min-w-0">
           <p className={`font-semibold truncate ${done ? "line-through text-muted-foreground" : ""}`}>{t.title}</p>
           <p className="text-xs text-muted-foreground">{formatDuration(t.duration_minutes)} · <span className="capitalize">{t.energy}</span> Energy</p>

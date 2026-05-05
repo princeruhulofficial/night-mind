@@ -1,17 +1,34 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
-import { Moon, Sun, MoreVertical, Loader2 } from "lucide-react";
+import { Moon, Sun, MoreVertical, Loader2, Trophy, Crown } from "lucide-react";
 import { todayISO, formatDuration, greeting } from "@/lib/format";
-import { getTaskIcon } from "@/lib/icons";
+import { TaskIconTile } from "@/components/app/TaskIconTile";
+import { UserAvatar } from "@/components/app/Avatar";
 
 export default function Home() {
   const { user } = useAuth();
   const { data: profile } = useProfile();
   const navigate = useNavigate();
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel(`home-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "tasks", filter: `user_id=eq.${user.id}` }, () => {
+        qc.invalidateQueries({ queryKey: ["tasks"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "credibility_events", filter: `user_id=eq.${user.id}` }, () => {
+        qc.invalidateQueries({ queryKey: ["credibility"] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user, qc]);
 
   const { data: tasks = [], isLoading } = useQuery({
     queryKey: ["tasks", "today", user?.id],
@@ -37,6 +54,16 @@ export default function Home() {
     },
   });
 
+  const { data: leaders = [] } = useQuery({
+    queryKey: ["leaderboard", "top3"],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_leaderboard");
+      if (error) throw error;
+      return ((data ?? []) as any[]).slice(0, 3);
+    },
+  });
+
   const completed = tasks.filter((t) => t.status === "done").length;
   const top3 = tasks.slice(0, 3);
   const progress = tasks.length ? Math.round((completed / tasks.length) * 100) : 0;
@@ -51,7 +78,9 @@ export default function Home() {
           <h2 className="text-2xl font-bold gradient-text">{name} ☀️</h2>
           <p className="text-xs text-muted-foreground mt-1">Plan ready. Start with clarity.</p>
         </div>
-        <div className="h-12 w-12 rounded-full bg-gradient-purple/30 grid place-items-center"><Sun className="h-6 w-6 text-primary" /></div>
+        <button onClick={() => navigate("/profile")} aria-label="Profile">
+          <UserAvatar name={profile?.name} url={profile?.avatar_url} size={48} />
+        </button>
       </header>
 
       <div className="glass rounded-2xl p-4 flex items-center justify-between">
@@ -81,11 +110,10 @@ export default function Home() {
         ) : (
           <div className="space-y-3">
             {top3.map((t, i) => {
-              const Icon = getTaskIcon(t.icon);
               const active = i === 0 && t.status !== "done";
               return (
                 <div key={t.id} className={`rounded-2xl p-4 flex items-center gap-3 border ${active ? "bg-gradient-purple/20 border-primary shadow-glow" : "glass"}`}>
-                  <div className="h-12 w-12 rounded-xl bg-gradient-purple/30 grid place-items-center"><Icon className="h-5 w-5 text-primary" /></div>
+                  <TaskIconTile icon={t.icon} size={52} />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold truncate">{t.title}</p>
                     <p className="text-xs text-muted-foreground">{formatDuration(t.duration_minutes)} · <span className="capitalize">{t.energy}</span> Energy</p>
@@ -97,6 +125,29 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      {leaders.length > 0 && (
+        <button onClick={() => navigate("/leaderboard")} className="glass rounded-2xl p-4 w-full text-left">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2"><Trophy className="h-4 w-4 text-accent" /><p className="font-semibold text-sm">Top performers</p></div>
+            <span className="text-xs text-primary">View all ›</span>
+          </div>
+          <div className="flex items-center gap-3">
+            {leaders.map((l: any, i: number) => (
+              <div key={l.user_id} className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="relative">
+                  <UserAvatar name={l.name} url={l.avatar_url} size={36} />
+                  {i === 0 && <Crown className="h-3.5 w-3.5 text-accent absolute -top-2 left-1/2 -translate-x-1/2 fill-accent" />}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold truncate">#{l.rank} {l.user_id === user?.id ? "You" : l.name}</p>
+                  <p className="text-[10px] text-muted-foreground">{l.completed_week} done</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </button>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <div className="glass rounded-2xl p-4">

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
@@ -9,11 +10,13 @@ export type Profile = {
   wake_time: string;
   focus_areas: string[];
   onboarded: boolean;
+  avatar_url: string | null;
 };
 
 export function useProfile() {
   const { user } = useAuth();
-  return useQuery({
+  const qc = useQueryClient();
+  const q = useQuery({
     queryKey: ["profile", user?.id],
     enabled: !!user,
     queryFn: async (): Promise<Profile | null> => {
@@ -23,6 +26,19 @@ export function useProfile() {
       return data as Profile | null;
     },
   });
+
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel(`profile-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: `id=eq.${user.id}` }, () => {
+        qc.invalidateQueries({ queryKey: ["profile", user.id] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user, qc]);
+
+  return q;
 }
 
 export function useUpdateProfile() {
@@ -31,7 +47,8 @@ export function useUpdateProfile() {
   return useMutation({
     mutationFn: async (patch: Partial<Profile>) => {
       if (!user) throw new Error("Not authenticated");
-      const { error } = await supabase.from("profiles").update(patch).eq("id", user.id);
+      // upsert in case profile row doesn't exist yet
+      const { error } = await supabase.from("profiles").upsert({ id: user.id, ...patch }, { onConflict: "id" });
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["profile", user?.id] }),

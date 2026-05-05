@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useEmblaCarousel from "embla-carousel-react";
-import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/app/Logo";
-import { ArrowRight, Briefcase, Heart, BookOpen, Check } from "lucide-react";
-import bedImg from "@/assets/onboard-bed.jpg";
+import { TimeDial } from "@/components/app/TimeDial";
+import { ArrowRight, Briefcase, Heart, BookOpen, Check, Brain } from "lucide-react";
 import { useUpdateProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
 
@@ -30,15 +29,16 @@ export default function Onboarding() {
   }, [embla]);
 
   function next() {
-    if (index === 0) {
-      navigate("/onboarding/sleep", { state: { sleep, focus, wake } });
-      return;
-    }
     if (index < 2) embla?.scrollNext();
     else finish();
   }
 
   async function finish() {
+    if (focus.length === 0) {
+      toast.error("Pick at least one focus area");
+      embla?.scrollTo(1);
+      return;
+    }
     try {
       await update.mutateAsync({ sleep_time: sleep, wake_time: wake, focus_areas: focus, onboarded: true });
       toast.success("All set! Let's plan your night.");
@@ -61,15 +61,15 @@ export default function Onboarding() {
 
       <div className="overflow-hidden flex-1" ref={emblaRef}>
         <div className="flex h-full">
-          {/* Card 1 */}
+          {/* Card 1 — Sleep time */}
           <div className="min-w-0 flex-[0_0_100%] px-6 py-4">
-            <Card num={1} title="What time do you usually go to sleep?" subtitle="Let's set your ideal sleep time.">
-              <img src={bedImg} alt="Cozy bed at night" width={400} height={400} className="w-full rounded-2xl object-cover aspect-square my-4" />
+            <Card num={1} title="When do you go to sleep?" subtitle="Drag the dial to set your bedtime.">
+              <div className="my-4 grid place-items-center"><TimeDial value={sleep} onChange={setSleep} variant="sleep" /></div>
               <Hint>Better sleep leads to better focus and a better you.</Hint>
             </Card>
           </div>
 
-          {/* Card 2 */}
+          {/* Card 2 — Focus */}
           <div className="min-w-0 flex-[0_0_100%] px-6 py-4">
             <Card num={2} title="What areas do you want to focus on?" subtitle="Pick one or more.">
               <div className="space-y-3 my-4">
@@ -97,17 +97,10 @@ export default function Onboarding() {
             </Card>
           </div>
 
-          {/* Card 3 */}
+          {/* Card 3 — Wake-up */}
           <div className="min-w-0 flex-[0_0_100%] px-6 py-4">
-            <Card num={3} title="What's your wake-up time?" subtitle="We'll help you start strong.">
-              <div className="my-6 grid place-items-center">
-                <input
-                  type="time"
-                  value={wake}
-                  onChange={(e) => setWake(e.target.value)}
-                  className="bg-surface text-4xl font-semibold text-center rounded-2xl px-6 py-4 border border-border outline-none focus:border-primary"
-                />
-              </div>
+            <Card num={3} title="When do you wake up?" subtitle="Drag the dial to set your wake time.">
+              <div className="my-4 grid place-items-center"><TimeDial value={wake} onChange={setWake} variant="wake" /></div>
               <Hint>A consistent wake time stabilizes your energy through the day.</Hint>
             </Card>
           </div>
@@ -144,7 +137,7 @@ function Card({ num, title, subtitle, children }: { num: number; title: string; 
 function Hint({ children }: { children: React.ReactNode }) {
   return (
     <div className="mt-auto flex gap-2 items-start rounded-xl bg-surface/60 p-3 border border-border">
-      <div className="h-5 w-5 rounded-full bg-gradient-purple grid place-items-center text-[10px] mt-0.5">✦</div>
+      <Brain className="h-4 w-4 text-primary mt-0.5 shrink-0" />
       <p className="text-xs text-muted-foreground leading-relaxed">{children}</p>
     </div>
   );
