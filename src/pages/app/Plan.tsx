@@ -7,7 +7,7 @@ import { AiAvatar } from "@/components/app/AiAvatar";
 import { Button } from "@/components/ui/button";
 import { Clock, GripVertical, ListOrdered, RefreshCw, Pencil, Check, Loader2 } from "lucide-react";
 import { todayISO, formatDuration } from "@/lib/format";
-import { getTaskIcon } from "@/lib/icons";
+import { TaskIconTile } from "@/components/app/TaskIconTile";
 import brain from "@/assets/ai-brain.png";
 import { toast } from "sonner";
 
@@ -71,14 +71,13 @@ export default function Plan() {
         ) : (
           <div className="space-y-3">
             {tasks.map((t, i) => {
-              const Icon = getTaskIcon(t.icon);
               const dots = t.priority === "high" ? 3 : t.priority === "medium" ? 2 : 1;
               return (
                 <div key={t.id} className="glass rounded-2xl p-3 flex items-stretch gap-3 border-l-2 border-primary/60">
                   <div className="flex flex-col items-center gap-2 pt-1">
                     <div className="h-7 w-7 rounded-full bg-primary/30 grid place-items-center text-xs font-bold text-primary">{i + 1}</div>
                   </div>
-                  <div className="h-12 w-12 rounded-xl bg-gradient-purple/30 grid place-items-center self-center"><Icon className="h-6 w-6 text-primary" /></div>
+                  <TaskIconTile icon={t.icon} size={52} className="self-center" />
                   <div className="flex-1 min-w-0 self-center">
                     <p className="font-semibold truncate">{t.title}</p>
                     {t.description && <p className="text-xs text-muted-foreground line-clamp-2">{t.description}</p>}
