@@ -100,6 +100,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
           focus_areas: string[] | null
           id: string
@@ -110,6 +111,7 @@ export type Database = {
           wake_time: string | null
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           focus_areas?: string[] | null
           id: string
@@ -120,6 +122,7 @@ export type Database = {
           wake_time?: string | null
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           focus_areas?: string[] | null
           id?: string
@@ -267,7 +270,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_leaderboard: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          completed_total: number
+          completed_week: number
+          name: string
+          rank: number
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       task_energy: "high" | "medium" | "low"
