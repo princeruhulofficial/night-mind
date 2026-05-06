@@ -30,7 +30,7 @@ export function useProfile() {
   useEffect(() => {
     if (!user) return;
     const ch = supabase
-      .channel(`profile-${user.id}`)
+      .channel(`profile-${user.id}-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: `id=eq.${user.id}` }, () => {
         qc.invalidateQueries({ queryKey: ["profile", user.id] });
       })
