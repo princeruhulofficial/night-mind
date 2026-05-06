@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { BarChart3, Mic, Plus, HelpCircle, Send, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { todayISO } from "@/lib/format";
-import { Brain, Dumbbell, FileText, BookOpen } from "lucide-react";
+import { Brain, Dumbbell, FileText, BookOpen, MicOff } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useVoiceInput } from "@/hooks/useVoiceInput";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -29,6 +30,7 @@ export default function Checkin() {
   const [streaming, setStreaming] = useState(false);
   const [generating, setGenerating] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
+  const voice = useVoiceInput({ onResult: (t) => setInput((cur) => (cur ? cur + " " : "") + t) });
 
   useEffect(() => { scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" }); }, [messages]);
 
@@ -178,7 +180,13 @@ export default function Checkin() {
           </button>
         </div>
         <div className="flex gap-2 text-xs">
-          <Chip icon={Mic} label="Voice Note" />
+          <button
+            onClick={() => (voice.listening ? voice.stop() : voice.start())}
+            disabled={!voice.supported}
+            className={`flex-1 flex items-center justify-center gap-1 rounded-full border py-2 transition ${voice.listening ? "border-primary bg-primary/15 text-primary animate-pulse" : "border-border bg-surface/40 text-muted-foreground"} disabled:opacity-40`}
+          >
+            {voice.listening ? <><MicOff className="h-3.5 w-3.5" /> Stop</> : <><Mic className="h-3.5 w-3.5" /> Voice {voice.supported ? "" : "(N/A)"}</>}
+          </button>
           <Chip icon={Plus} label="Add More" />
           <Chip icon={HelpCircle} label="Not Sure" />
         </div>
