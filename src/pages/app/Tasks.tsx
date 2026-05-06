@@ -20,13 +20,17 @@ export default function Tasks() {
 
   useEffect(() => {
     if (!user) return;
-    const ch = supabase
-      .channel(`tasks-${user.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "tasks", filter: `user_id=eq.${user.id}` }, () => {
-        qc.invalidateQueries({ queryKey: ["tasks"] });
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    let cancelled = false;
+    const ch = supabase.channel(`tasks-${user.id}-${Math.random().toString(36).slice(2)}`);
+    ch.on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "tasks", filter: `user_id=eq.${user.id}` },
+      () => { if (!cancelled) qc.invalidateQueries({ queryKey: ["tasks"] }); },
+    ).subscribe();
+    return () => {
+      cancelled = true;
+      ch.unsubscribe().finally(() => { supabase.removeChannel(ch); });
+    };
   }, [user, qc]);
 
   const { data: tasks = [], isLoading } = useQuery({
