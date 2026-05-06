@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,12 +9,25 @@ import { Trophy, Crown, Loader2, Flame } from "lucide-react";
 
 type Row = { user_id: string; name: string; avatar_url: string | null; completed_week: number; completed_total: number; rank: number };
 
+const DEMO_USERS: Omit<Row, "rank">[] = [
+  { user_id: "demo-1", name: "Aarav Sharma",    avatar_url: null, completed_week: 42, completed_total: 318 },
+  { user_id: "demo-2", name: "Priya Patel",     avatar_url: null, completed_week: 39, completed_total: 295 },
+  { user_id: "demo-3", name: "Jonas Müller",    avatar_url: null, completed_week: 36, completed_total: 271 },
+  { user_id: "demo-4", name: "Sofia Rossi",     avatar_url: null, completed_week: 33, completed_total: 244 },
+  { user_id: "demo-5", name: "Liam O'Connor",   avatar_url: null, completed_week: 30, completed_total: 220 },
+  { user_id: "demo-6", name: "Yuki Tanaka",     avatar_url: null, completed_week: 27, completed_total: 198 },
+  { user_id: "demo-7", name: "Fatima Hassan",   avatar_url: null, completed_week: 24, completed_total: 176 },
+  { user_id: "demo-8", name: "Diego Fernández", avatar_url: null, completed_week: 21, completed_total: 158 },
+  { user_id: "demo-9", name: "Chloé Dubois",    avatar_url: null, completed_week: 18, completed_total: 132 },
+  { user_id: "demo-10", name: "Noah Andersen",  avatar_url: null, completed_week: 15, completed_total: 110 },
+];
+
 export default function Leaderboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
 
-  const { data: rows = [], isLoading } = useQuery({
+  const { data: realRows = [], isLoading } = useQuery({
     queryKey: ["leaderboard"],
     queryFn: async (): Promise<Row[]> => {
       const { data, error } = await supabase.rpc("get_leaderboard");
@@ -22,6 +35,18 @@ export default function Leaderboard() {
       return (data ?? []) as Row[];
     },
   });
+
+  const rows = useMemo(() => {
+    const merged: Omit<Row, "rank">[] = [
+      ...realRows.map(({ rank, ...r }) => r),
+      ...DEMO_USERS,
+    ];
+    // dedupe by user_id (favor real)
+    const seen = new Set<string>();
+    const unique = merged.filter((r) => (seen.has(r.user_id) ? false : (seen.add(r.user_id), true)));
+    unique.sort((a, b) => b.completed_week - a.completed_week || b.completed_total - a.completed_total);
+    return unique.map((r, i) => ({ ...r, rank: i + 1 }));
+  }, [realRows]);
 
   useEffect(() => {
     let cancelled = false;
