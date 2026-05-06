@@ -144,6 +144,7 @@ export type Database = {
           icon: string | null
           id: string
           priority: Database["public"]["Enums"]["task_priority"]
+          reminder_at: string | null
           scheduled_for: string
           sort_order: number
           starred: boolean
@@ -160,6 +161,7 @@ export type Database = {
           icon?: string | null
           id?: string
           priority?: Database["public"]["Enums"]["task_priority"]
+          reminder_at?: string | null
           scheduled_for?: string
           sort_order?: number
           starred?: boolean
@@ -176,6 +178,7 @@ export type Database = {
           icon?: string | null
           id?: string
           priority?: Database["public"]["Enums"]["task_priority"]
+          reminder_at?: string | null
           scheduled_for?: string
           sort_order?: number
           starred?: boolean
