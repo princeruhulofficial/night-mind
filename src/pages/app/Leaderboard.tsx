@@ -24,13 +24,17 @@ export default function Leaderboard() {
   });
 
   useEffect(() => {
-    const ch = supabase
-      .channel("leaderboard-tasks")
-      .on("postgres_changes", { event: "*", schema: "public", table: "tasks" }, () => {
-        qc.invalidateQueries({ queryKey: ["leaderboard"] });
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    let cancelled = false;
+    const ch = supabase.channel(`leaderboard-tasks-${Math.random().toString(36).slice(2)}`);
+    ch.on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "tasks" },
+      () => { if (!cancelled) qc.invalidateQueries({ queryKey: ["leaderboard"] }); },
+    ).subscribe();
+    return () => {
+      cancelled = true;
+      ch.unsubscribe().finally(() => { supabase.removeChannel(ch); });
+    };
   }, [qc]);
 
   const me = rows.find((r) => r.user_id === user?.id);
