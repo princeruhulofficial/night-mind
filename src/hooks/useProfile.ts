@@ -29,13 +29,22 @@ export function useProfile() {
 
   useEffect(() => {
     if (!user) return;
-    const ch = supabase
-      .channel(`profile-${user.id}-${Math.random().toString(36).slice(2)}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: `id=eq.${user.id}` }, () => {
+    let cancelled = false;
+    const ch = supabase.channel(`profile-${user.id}-${Math.random().toString(36).slice(2)}`);
+    ch.on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
+      () => {
+        if (cancelled) return;
         qc.invalidateQueries({ queryKey: ["profile", user.id] });
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
+      },
+    ).subscribe();
+    return () => {
+      cancelled = true;
+      ch.unsubscribe().finally(() => {
+        supabase.removeChannel(ch);
+      });
+    };
   }, [user, qc]);
 
   return q;
