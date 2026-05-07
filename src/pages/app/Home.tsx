@@ -9,6 +9,7 @@ import { Moon, Sun, MoreVertical, Loader2, Trophy, Crown } from "lucide-react";
 import { todayISO, formatDuration, greeting } from "@/lib/format";
 import { TaskIconTile } from "@/components/app/TaskIconTile";
 import { UserAvatar } from "@/components/app/Avatar";
+import { LifeClock } from "@/components/app/LifeClock";
 
 export default function Home() {
   const { user } = useAuth();
@@ -98,6 +99,8 @@ export default function Home() {
         </div>
         <span className="text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300">Good</span>
       </div>
+
+      <LifeClock />
 
       <section>
         <div className="flex items-end justify-between mb-3">
