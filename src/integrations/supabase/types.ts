@@ -101,9 +101,11 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          birth_date: string | null
           created_at: string
           focus_areas: string[] | null
           id: string
+          language: string
           name: string | null
           onboarded: boolean
           sleep_time: string | null
@@ -112,9 +114,11 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          birth_date?: string | null
           created_at?: string
           focus_areas?: string[] | null
           id: string
+          language?: string
           name?: string | null
           onboarded?: boolean
           sleep_time?: string | null
@@ -123,9 +127,11 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          birth_date?: string | null
           created_at?: string
           focus_areas?: string[] | null
           id?: string
+          language?: string
           name?: string | null
           onboarded?: boolean
           sleep_time?: string | null
