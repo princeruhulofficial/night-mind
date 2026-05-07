@@ -11,6 +11,8 @@ export type Profile = {
   focus_areas: string[];
   onboarded: boolean;
   avatar_url: string | null;
+  birth_date: string | null;
+  language: "en" | "bn";
 };
 
 export function useProfile() {
