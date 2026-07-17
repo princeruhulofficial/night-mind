@@ -1,9 +1,12 @@
+import { tr, type Lang } from "./i18n";
+
 export function formatDuration(min: number) {
   if (min < 60) return `${min}m`;
   const h = Math.floor(min / 60);
   const m = min % 60;
   return m ? `${h}h ${m}m` : `${h}h`;
 }
+
 export function formatTime12(hhmm: string) {
   const [hStr, mStr] = hhmm.split(":");
   let h = parseInt(hStr, 10);
@@ -12,12 +15,14 @@ export function formatTime12(hhmm: string) {
   h = h % 12 || 12;
   return `${h}:${m} ${period}`;
 }
+
 export function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
-export function greeting() {
+
+export function greeting(lang: Lang = "en") {
   const h = new Date().getHours();
-  if (h < 12) return "Good Morning";
-  if (h < 18) return "Good Afternoon";
-  return "Good Evening";
+  if (h < 12) return tr(lang, "goodMorning");
+  if (h < 18) return tr(lang, "goodAfternoon");
+  return tr(lang, "goodEvening");
 }

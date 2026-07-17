@@ -1,16 +1,21 @@
 import { Home, MessageCircle, ListChecks, User as UserIcon } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-
-const items = [
-  { to: "/home", icon: Home, label: "Home" },
-  { to: "/checkin", icon: MessageCircle, label: "Check-in" },
-  { to: "/tasks", icon: ListChecks, label: "Tasks" },
-  { to: "/profile", icon: UserIcon, label: "Profile" },
-];
+import { useProfile } from "@/hooks/useProfile";
+import { tr, type Lang } from "@/lib/i18n";
 
 export function BottomNav() {
   const navigate = useNavigate();
+  const { data: profile } = useProfile();
+  const lang: Lang = (profile?.language as Lang) ?? "en";
+
+  const items = [
+    { to: "/home", icon: Home, label: tr(lang, "navHome") },
+    { to: "/checkin", icon: MessageCircle, label: tr(lang, "navCheckin") },
+    { to: "/tasks", icon: ListChecks, label: tr(lang, "navTasks") },
+    { to: "/profile", icon: UserIcon, label: tr(lang, "navProfile") },
+  ];
+
   return (
     <nav className="fixed bottom-0 inset-x-0 z-40 px-4 pb-3 safe-bottom pointer-events-none">
       <div className="relative max-w-md mx-auto pointer-events-auto">
