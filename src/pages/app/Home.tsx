@@ -5,17 +5,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
-import { Moon, Sun, MoreVertical, Loader2, Trophy, Crown } from "lucide-react";
+import { Moon, MoreVertical, Loader2, Trophy, Crown } from "lucide-react";
 import { todayISO, formatDuration, greeting } from "@/lib/format";
 import { TaskIconTile } from "@/components/app/TaskIconTile";
 import { UserAvatar } from "@/components/app/Avatar";
 import { LifeClock } from "@/components/app/LifeClock";
+import { tr, type Lang } from "@/lib/i18n";
 
 export default function Home() {
   const { user } = useAuth();
   const { data: profile } = useProfile();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const lang: Lang = (profile?.language as Lang) ?? "en";
 
   useEffect(() => {
     if (!user) return;
@@ -80,21 +82,28 @@ export default function Home() {
     <main className="px-5 pt-6 pb-4 safe-top space-y-5 animate-fade-in-up">
       <header className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold leading-tight">{greeting()},</h1>
+          <h1 className="text-2xl font-bold leading-tight">{greeting(lang)},</h1>
           <h2 className="text-2xl font-bold gradient-text">{name} ☀️</h2>
-          <p className="text-xs text-muted-foreground mt-1">Plan ready. Start with clarity.</p>
+          <p className="text-xs text-muted-foreground mt-1">{tr(lang, "planReady")}</p>
         </div>
         <button onClick={() => navigate("/profile")} aria-label="Profile">
           <UserAvatar name={profile?.name} url={profile?.avatar_url} size={48} />
         </button>
       </header>
 
+      {/* Sleep insight card — currently static until real sleep tracking is connected */}
       <div className="glass rounded-2xl p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-primary/20 grid place-items-center"><Moon className="h-5 w-5 text-primary" /></div>
+          <div className="h-10 w-10 rounded-xl bg-primary/20 grid place-items-center">
+            <Moon className="h-5 w-5 text-primary" />
+          </div>
           <div>
-            <p className="text-xs text-muted-foreground">Sleep Insight</p>
-            <p className="font-semibold text-sm">You slept 6h 20m</p>
+            <p className="text-xs text-muted-foreground">{tr(lang, "sleepInsight")}</p>
+            <p className="font-semibold text-sm">
+              {profile?.sleep_time && profile?.wake_time
+                ? `${tr(lang, "youSlept")} · ${profile.sleep_time} → ${profile.wake_time}`
+                : tr(lang, "sleepInsight")}
+            </p>
           </div>
         </div>
         <span className="text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300">Good</span>
@@ -105,28 +114,39 @@ export default function Home() {
       <section>
         <div className="flex items-end justify-between mb-3">
           <div>
-            <h3 className="font-semibold">Today's Plan</h3>
-            <p className="text-xs text-muted-foreground">Top 3 Priority Tasks</p>
+            <h3 className="font-semibold">{tr(lang, "todaysPlan")}</h3>
+            <p className="text-xs text-muted-foreground">{tr(lang, "top3Priority")}</p>
           </div>
           <span className="text-sm text-primary font-semibold">{progress}%</span>
         </div>
 
         {isLoading ? (
-          <div className="grid place-items-center py-10"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+          <div className="grid place-items-center py-10">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          </div>
         ) : top3.length === 0 ? (
-          <EmptyTasks onGenerate={() => navigate("/checkin")} />
+          <EmptyTasks onGenerate={() => navigate("/checkin")} lang={lang} />
         ) : (
           <div className="space-y-3">
             {top3.map((t, i) => {
               const active = i === 0 && t.status !== "done";
               return (
-                <div key={t.id} className={`rounded-2xl p-4 flex items-center gap-3 border ${active ? "bg-gradient-purple/20 border-primary shadow-glow" : "glass"}`}>
+                <div
+                  key={t.id}
+                  className={`rounded-2xl p-4 flex items-center gap-3 border ${
+                    active ? "bg-gradient-purple/20 border-primary shadow-glow" : "glass"
+                  }`}
+                >
                   <TaskIconTile icon={t.icon} size={52} />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold truncate">{t.title}</p>
-                    <p className="text-xs text-muted-foreground">{formatDuration(t.duration_minutes)} · <span className="capitalize">{t.energy}</span> Energy</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDuration(t.duration_minutes)} · <span className="capitalize">{t.energy}</span> Energy
+                    </p>
                   </div>
-                  <button className="text-muted-foreground p-1" aria-label="More"><MoreVertical className="h-4 w-4" /></button>
+                  <button className="text-muted-foreground p-1" aria-label="More">
+                    <MoreVertical className="h-4 w-4" />
+                  </button>
                 </div>
               );
             })}
@@ -137,19 +157,28 @@ export default function Home() {
       {leaders.length > 0 && (
         <button onClick={() => navigate("/leaderboard")} className="glass rounded-2xl p-4 w-full text-left">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2"><Trophy className="h-4 w-4 text-accent" /><p className="font-semibold text-sm">Top performers</p></div>
-            <span className="text-xs text-primary">View all ›</span>
+            <div className="flex items-center gap-2">
+              <Trophy className="h-4 w-4 text-accent" />
+              <p className="font-semibold text-sm">{tr(lang, "topPerformers")}</p>
+            </div>
+            <span className="text-xs text-primary">{tr(lang, "viewAll")} ›</span>
           </div>
           <div className="flex items-center gap-3">
             {leaders.map((l: any, i: number) => (
               <div key={l.user_id} className="flex items-center gap-2 flex-1 min-w-0">
                 <div className="relative">
                   <UserAvatar name={l.name} url={l.avatar_url} size={36} />
-                  {i === 0 && <Crown className="h-3.5 w-3.5 text-accent absolute -top-2 left-1/2 -translate-x-1/2 fill-accent" />}
+                  {i === 0 && (
+                    <Crown className="h-3.5 w-3.5 text-accent absolute -top-2 left-1/2 -translate-x-1/2 fill-accent" />
+                  )}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold truncate">#{l.rank} {l.user_id === user?.id ? "You" : l.name}</p>
-                  <p className="text-[10px] text-muted-foreground">{l.completed_week} done</p>
+                  <p className="text-xs font-semibold truncate">
+                    #{l.rank} {l.user_id === user?.id ? tr(lang, "you") : l.name}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {l.completed_week} {tr(lang, "thisWeek")}
+                  </p>
                 </div>
               </div>
             ))}
@@ -159,29 +188,38 @@ export default function Home() {
 
       <div className="grid grid-cols-2 gap-3">
         <div className="glass rounded-2xl p-4">
-          <p className="text-xs text-muted-foreground">Progress</p>
-          <p className="text-sm font-semibold mt-0.5">{completed} of {tasks.length} completed</p>
+          <p className="text-xs text-muted-foreground">{tr(lang, "progress")}</p>
+          <p className="text-sm font-semibold mt-0.5">
+            {completed} {tr(lang, "ofCompleted")} {tasks.length} {tr(lang, "completed")}
+          </p>
           <div className="mt-2 text-2xl font-bold text-primary">{progress}%</div>
         </div>
         <button onClick={() => navigate("/credibility")} className="glass rounded-2xl p-4 text-left">
-          <p className="text-xs text-muted-foreground">Credibility Score</p>
-          <p className="text-2xl font-bold gradient-text mt-1">{cred ?? "--"} <span className="text-xs text-emerald-400">+6</span></p>
-          <p className="text-[10px] text-muted-foreground mt-1">Great consistency yesterday!</p>
+          <p className="text-xs text-muted-foreground">{tr(lang, "credibilityScore")}</p>
+          <p className="text-2xl font-bold gradient-text mt-1">
+            {cred ?? "--"} <span className="text-xs text-emerald-400">+6</span>
+          </p>
+          <p className="text-[10px] text-muted-foreground mt-1">{tr(lang, "greatConsistency")}</p>
         </button>
       </div>
 
-      <Button onClick={() => navigate("/tasks")} className="w-full h-14 rounded-full bg-gradient-purple shadow-glow text-base">
-        View Full Plan
+      <Button
+        onClick={() => navigate("/tasks")}
+        className="w-full h-14 rounded-full bg-gradient-purple shadow-glow text-base"
+      >
+        {tr(lang, "viewFullPlan")}
       </Button>
     </main>
   );
 }
 
-function EmptyTasks({ onGenerate }: { onGenerate: () => void }) {
+function EmptyTasks({ onGenerate, lang }: { onGenerate: () => void; lang: Lang }) {
   return (
     <div className="glass rounded-2xl p-6 text-center space-y-3">
-      <p className="text-sm text-muted-foreground">No plan yet for today.</p>
-      <Button onClick={onGenerate} className="bg-gradient-purple shadow-glow rounded-full px-6">Start Night Check-in</Button>
+      <p className="text-sm text-muted-foreground">{tr(lang, "noPlanYet")}</p>
+      <Button onClick={onGenerate} className="bg-gradient-purple shadow-glow rounded-full px-6">
+        {tr(lang, "startNightCheckin")}
+      </Button>
     </div>
   );
 }
