@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
+import { I18nProvider } from "@/hooks/useTranslation";
 import { MobileShell } from "@/components/app/MobileShell";
 import { Protected } from "@/components/app/Protected";
 import Index from "./pages/Index";
@@ -31,39 +32,41 @@ const App = () => (
       <Sonner theme="dark" position="top-center" />
       <BrowserRouter>
         <AuthProvider>
-          <div className="mx-auto max-w-md min-h-screen relative">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
+          <I18nProvider>
+            <div className="mx-auto max-w-md min-h-screen relative">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
 
-              {/* Onboarding (logged-in but not yet onboarded ok) */}
-              <Route element={<Protected requireOnboarded={false} />}>
-                <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/onboarding/sleep" element={<SleepTime />} />
-              </Route>
-
-              {/* Main app with bottom nav */}
-              <Route element={<Protected />}>
-                <Route element={<MobileShell />}>
-                  <Route path="/home" element={<Home />} />
-                  <Route path="/checkin" element={<Checkin />} />
-                  <Route path="/tasks" element={<Tasks />} />
-                  <Route path="/profile" element={<Profile />} />
+                {/* Onboarding (logged-in but not yet onboarded ok) */}
+                <Route element={<Protected requireOnboarded={false} />}>
+                  <Route path="/onboarding" element={<Onboarding />} />
+                  <Route path="/onboarding/sleep" element={<SleepTime />} />
                 </Route>
-                {/* Full-screen app routes (no bottom nav) */}
-                <Route path="/plan" element={<Plan />} />
-                <Route path="/why" element={<Why />} />
-                <Route path="/credibility" element={<Credibility />} />
-                <Route path="/patterns" element={<Patterns />} />
-                <Route path="/adjustment" element={<Adjustment />} />
-                <Route path="/reminder" element={<Reminder />} />
-                <Route path="/debrief" element={<WeeklyDebrief />} />
-                <Route path="/leaderboard" element={<Leaderboard />} />
-              </Route>
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
+                {/* Main app with bottom nav */}
+                <Route element={<Protected />}>
+                  <Route element={<MobileShell />}>
+                    <Route path="/home" element={<Home />} />
+                    <Route path="/checkin" element={<Checkin />} />
+                    <Route path="/tasks" element={<Tasks />} />
+                    <Route path="/profile" element={<Profile />} />
+                  </Route>
+                  {/* Full-screen app routes (no bottom nav) */}
+                  <Route path="/plan" element={<Plan />} />
+                  <Route path="/why" element={<Why />} />
+                  <Route path="/credibility" element={<Credibility />} />
+                  <Route path="/patterns" element={<Patterns />} />
+                  <Route path="/adjustment" element={<Adjustment />} />
+                  <Route path="/reminder" element={<Reminder />} />
+                  <Route path="/debrief" element={<WeeklyDebrief />} />
+                  <Route path="/leaderboard" element={<Leaderboard />} />
+                </Route>
+
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
+          </I18nProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

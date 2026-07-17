@@ -1,4 +1,23 @@
+/**
+ * NightMind i18n System
+ * --------------------
+ * Simple, type-safe, zero-dependency internationalization.
+ *
+ * Architecture:
+ * 1. Dictionary lives here (`t` object)
+ * 2. I18nProvider (src/hooks/useTranslation.tsx) reads language from profile
+ * 3. Components call `const { t, lang } = useTranslation()`
+ * 4. Language is persisted in `profiles.language`
+ *
+ * Supported features:
+ * - Nested keys via flat object (type-safe)
+ * - Interpolation: t("welcome", { name: "Ruhul" }) → "Welcome, Ruhul"
+ * - Fallback to English if key missing in current language
+ */
+
 export type Lang = "en" | "bn";
+
+export const SUPPORTED_LANGS: Lang[] = ["en", "bn"];
 
 export const t = {
   en: {
@@ -59,6 +78,7 @@ export const t = {
     greatConsistency: "Great consistency yesterday!",
     topPerformers: "Top performers",
     viewAll: "View all",
+    thisWeek: "this week",
 
     // Check-in
     nightCheckin: "Night Check-in",
@@ -104,13 +124,14 @@ export const t = {
     signOut: "Sign out",
     profilePictureUpdated: "Profile picture updated",
     scheduleUpdated: "Schedule updated",
+    setFocusAreas: "Set your focus areas",
+    tapToSwitch: "Tap to switch",
 
     // Leaderboard
     leaderboardTitle: "Leaderboard",
     topPerformersThisWeek: "Top performers this week",
     noDataYet: "No data yet. Be the first to complete tasks!",
     allRankings: "All rankings",
-    thisWeek: "this week",
     total: "total",
     you: "You",
 
@@ -119,6 +140,7 @@ export const t = {
     finish: "Finish",
     loading: "Loading...",
     errorGeneric: "Something went wrong",
+    welcomeName: "Welcome, {name}",
   },
 
   bn: {
@@ -179,6 +201,7 @@ export const t = {
     greatConsistency: "গতকাল দারুণ কনসিস্টেন্সি ছিল!",
     topPerformers: "শীর্ষ পারফর্মার",
     viewAll: "সব দেখো",
+    thisWeek: "এই সপ্তাহে",
 
     // Check-in
     nightCheckin: "নাইট চেক-ইন",
@@ -224,13 +247,14 @@ export const t = {
     signOut: "সাইন আউট",
     profilePictureUpdated: "প্রোফাইল ছবি আপডেট হয়েছে",
     scheduleUpdated: "সময়সূচি আপডেট হয়েছে",
+    setFocusAreas: "ফোকাস এরিয়া সেট করো",
+    tapToSwitch: "ট্যাপ করে পরিবর্তন করো",
 
     // Leaderboard
     leaderboardTitle: "লিডারবোর্ড",
     topPerformersThisWeek: "এই সপ্তাহের শীর্ষ পারফর্মার",
     noDataYet: "এখনো কোনো ডেটা নেই। প্রথম টাস্ক সম্পন্ন করো!",
     allRankings: "সব র‍্যাঙ্কিং",
-    thisWeek: "এই সপ্তাহে",
     total: "মোট",
     you: "তুমি",
 
@@ -239,11 +263,34 @@ export const t = {
     finish: "শেষ",
     loading: "লোড হচ্ছে...",
     errorGeneric: "কিছু একটা ভুল হয়েছে",
+    welcomeName: "স্বাগতম, {name}",
   },
 } as const;
 
 export type TranslationKey = keyof typeof t["en"];
 
+/** Simple interpolation: replaces {key} with values from params */
+function interpolate(template: string, params?: Record<string, string | number>): string {
+  if (!params) return template;
+  return template.replace(/\{(\w+)\}/g, (_, key) =>
+    params[key] !== undefined ? String(params[key]) : `{${key}}`,
+  );
+}
+
+/**
+ * Low-level translation function (used by the hook and non-React code).
+ * Prefer `useTranslation().t` inside React components.
+ */
+export function translate(
+  lang: Lang,
+  key: TranslationKey,
+  params?: Record<string, string | number>,
+): string {
+  const raw = t[lang]?.[key] ?? t.en[key] ?? key;
+  return interpolate(raw, params);
+}
+
+/** @deprecated Use `translate` or `useTranslation().t` instead */
 export function tr(lang: Lang, key: TranslationKey): string {
-  return t[lang]?.[key] ?? t.en[key];
+  return translate(lang, key);
 }
