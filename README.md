@@ -6,6 +6,11 @@ NightMind is a mobile-first AI-powered habit & sleep companion that helps you de
 
 > Built with privacy and focus in mind. Your data stays under your control.
 
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev/)
+[![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?logo=supabase)](https://supabase.com/)
+[![Capacitor](https://img.shields.io/badge/Capacitor-8-119EFF?logo=capacitor)](https://capacitorjs.com/)
+
 ---
 
 ## Features
@@ -64,8 +69,10 @@ night-mind/
 ├── supabase/
 │   ├── functions/        # Edge Functions (chat, generate-plan)
 │   └── migrations/       # SQL migrations
+├── docs/                 # Architecture & deeper documentation
 ├── public/
 ├── capacitor.config.ts
+├── .env.example
 └── package.json
 ```
 
@@ -90,15 +97,17 @@ npm install
 
 ### 2. Environment Variables
 
-Create a `.env` file in the root (or copy from `.env.example` if present):
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` with your Supabase credentials:
 
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
 VITE_SUPABASE_PROJECT_ID=your-project-id
 ```
-
-> The current repository already contains a working Supabase project configuration for development.
 
 ### 3. Run Locally
 
@@ -146,22 +155,11 @@ npx cap run android
 
 ---
 
-## Database Overview
+## Documentation
 
-Main tables (all protected by RLS):
-
-- `profiles` — name, sleep/wake times, focus areas, avatar_url, birth_date, language, onboarded
-- `tasks` — daily plan items (title, icon, duration, priority, energy, status, reminder_at)
-- `checkins` — night / why conversation history
-- `credibility_events` — score deltas
-- `patterns` — AI-detected patterns
-- `weekly_debriefs` — weekly summaries
-- `why_answers` — reasons for skipped tasks
-
-Key RPC:
-- `get_leaderboard()` — returns ranked users with weekly + total completions
-
-Realtime is enabled on the important tables so the UI updates live across devices.
+- [Architecture Overview](./docs/architecture.md)
+- [Database Schema](./docs/database.md)
+- [Contributing Guide](./CONTRIBUTING.md)
 
 ---
 
