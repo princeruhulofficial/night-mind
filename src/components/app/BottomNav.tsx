@@ -1,19 +1,17 @@
 import { Home, MessageCircle, ListChecks, User as UserIcon } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useProfile } from "@/hooks/useProfile";
-import { tr, type Lang } from "@/lib/i18n";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export function BottomNav() {
   const navigate = useNavigate();
-  const { data: profile } = useProfile();
-  const lang: Lang = (profile?.language as Lang) ?? "en";
+  const { t } = useTranslation();
 
   const items = [
-    { to: "/home", icon: Home, label: tr(lang, "navHome") },
-    { to: "/checkin", icon: MessageCircle, label: tr(lang, "navCheckin") },
-    { to: "/tasks", icon: ListChecks, label: tr(lang, "navTasks") },
-    { to: "/profile", icon: UserIcon, label: tr(lang, "navProfile") },
+    { to: "/home", icon: Home, label: t("navHome") },
+    { to: "/checkin", icon: MessageCircle, label: t("navCheckin") },
+    { to: "/tasks", icon: ListChecks, label: t("navTasks") },
+    { to: "/profile", icon: UserIcon, label: t("navProfile") },
   ];
 
   return (
@@ -46,7 +44,12 @@ function NavItem({ to, Icon, label }: { to: string; Icon: typeof Home; label: st
   return (
     <NavLink to={to} className="flex-1 flex justify-center">
       {({ isActive }) => (
-        <div className={cn("flex flex-col items-center gap-0.5 py-2 transition-colors", isActive ? "text-primary" : "text-muted-foreground")}>
+        <div
+          className={cn(
+            "flex flex-col items-center gap-0.5 py-2 transition-colors",
+            isActive ? "text-primary" : "text-muted-foreground",
+          )}
+        >
           <Icon className="h-5 w-5" />
           <span className="text-[10px] font-medium">{label}</span>
         </div>

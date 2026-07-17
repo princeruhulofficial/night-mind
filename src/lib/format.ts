@@ -1,4 +1,4 @@
-import { tr, type Lang } from "./i18n";
+import { translate, type Lang } from "./i18n";
 
 export function formatDuration(min: number) {
   if (min < 60) return `${min}m`;
@@ -22,7 +22,7 @@ export function todayISO() {
 
 export function greeting(lang: Lang = "en") {
   const h = new Date().getHours();
-  if (h < 12) return tr(lang, "goodMorning");
-  if (h < 18) return tr(lang, "goodAfternoon");
-  return tr(lang, "goodEvening");
+  if (h < 12) return translate(lang, "goodMorning");
+  if (h < 18) return translate(lang, "goodAfternoon");
+  return translate(lang, "goodEvening");
 }

@@ -4,20 +4,20 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Moon, MoreVertical, Loader2, Trophy, Crown } from "lucide-react";
 import { todayISO, formatDuration, greeting } from "@/lib/format";
 import { TaskIconTile } from "@/components/app/TaskIconTile";
 import { UserAvatar } from "@/components/app/Avatar";
 import { LifeClock } from "@/components/app/LifeClock";
-import { tr, type Lang } from "@/lib/i18n";
 
 export default function Home() {
   const { user } = useAuth();
   const { data: profile } = useProfile();
+  const { t, lang } = useTranslation();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const lang: Lang = (profile?.language as Lang) ?? "en";
 
   useEffect(() => {
     if (!user) return;
@@ -26,15 +26,23 @@ export default function Home() {
     ch.on(
       "postgres_changes",
       { event: "*", schema: "public", table: "tasks", filter: `user_id=eq.${user.id}` },
-      () => { if (!cancelled) qc.invalidateQueries({ queryKey: ["tasks"] }); },
-    ).on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "credibility_events", filter: `user_id=eq.${user.id}` },
-      () => { if (!cancelled) qc.invalidateQueries({ queryKey: ["credibility"] }); },
-    ).subscribe();
+      () => {
+        if (!cancelled) qc.invalidateQueries({ queryKey: ["tasks"] });
+      },
+    )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "credibility_events", filter: `user_id=eq.${user.id}` },
+        () => {
+          if (!cancelled) qc.invalidateQueries({ queryKey: ["credibility"] });
+        },
+      )
+      .subscribe();
     return () => {
       cancelled = true;
-      ch.unsubscribe().finally(() => { supabase.removeChannel(ch); });
+      ch.unsubscribe().finally(() => {
+        supabase.removeChannel(ch);
+      });
     };
   }, [user, qc]);
 
@@ -43,8 +51,10 @@ export default function Home() {
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("tasks").select("*")
-        .eq("user_id", user!.id).eq("scheduled_for", todayISO())
+        .from("tasks")
+        .select("*")
+        .eq("user_id", user!.id)
+        .eq("scheduled_for", todayISO())
         .order("sort_order");
       if (error) throw error;
       return data ?? [];
@@ -55,7 +65,10 @@ export default function Home() {
     queryKey: ["credibility", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase.from("credibility_events").select("delta").eq("user_id", user!.id);
+      const { data, error } = await supabase
+        .from("credibility_events")
+        .select("delta")
+        .eq("user_id", user!.id);
       if (error) throw error;
       const total = (data ?? []).reduce((s, r) => s + (r.delta ?? 0), 0);
       return Math.max(0, Math.min(100, 50 + total));
@@ -75,7 +88,6 @@ export default function Home() {
   const completed = tasks.filter((t) => t.status === "done").length;
   const top3 = tasks.slice(0, 3);
   const progress = tasks.length ? Math.round((completed / tasks.length) * 100) : 0;
-
   const name = profile?.name ?? "";
 
   return (
@@ -84,25 +96,24 @@ export default function Home() {
         <div>
           <h1 className="text-2xl font-bold leading-tight">{greeting(lang)},</h1>
           <h2 className="text-2xl font-bold gradient-text">{name} ☀️</h2>
-          <p className="text-xs text-muted-foreground mt-1">{tr(lang, "planReady")}</p>
+          <p className="text-xs text-muted-foreground mt-1">{t("planReady")}</p>
         </div>
         <button onClick={() => navigate("/profile")} aria-label="Profile">
           <UserAvatar name={profile?.name} url={profile?.avatar_url} size={48} />
         </button>
       </header>
 
-      {/* Sleep insight card — currently static until real sleep tracking is connected */}
       <div className="glass rounded-2xl p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-primary/20 grid place-items-center">
             <Moon className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">{tr(lang, "sleepInsight")}</p>
+            <p className="text-xs text-muted-foreground">{t("sleepInsight")}</p>
             <p className="font-semibold text-sm">
               {profile?.sleep_time && profile?.wake_time
-                ? `${tr(lang, "youSlept")} · ${profile.sleep_time} → ${profile.wake_time}`
-                : tr(lang, "sleepInsight")}
+                ? `${t("youSlept")} · ${profile.sleep_time} → ${profile.wake_time}`
+                : t("sleepInsight")}
             </p>
           </div>
         </div>
@@ -114,8 +125,8 @@ export default function Home() {
       <section>
         <div className="flex items-end justify-between mb-3">
           <div>
-            <h3 className="font-semibold">{tr(lang, "todaysPlan")}</h3>
-            <p className="text-xs text-muted-foreground">{tr(lang, "top3Priority")}</p>
+            <h3 className="font-semibold">{t("todaysPlan")}</h3>
+            <p className="text-xs text-muted-foreground">{t("top3Priority")}</p>
           </div>
           <span className="text-sm text-primary font-semibold">{progress}%</span>
         </div>
@@ -125,23 +136,24 @@ export default function Home() {
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
           </div>
         ) : top3.length === 0 ? (
-          <EmptyTasks onGenerate={() => navigate("/checkin")} lang={lang} />
+          <EmptyTasks onGenerate={() => navigate("/checkin")} />
         ) : (
           <div className="space-y-3">
-            {top3.map((t, i) => {
-              const active = i === 0 && t.status !== "done";
+            {top3.map((task, i) => {
+              const active = i === 0 && task.status !== "done";
               return (
                 <div
-                  key={t.id}
+                  key={task.id}
                   className={`rounded-2xl p-4 flex items-center gap-3 border ${
                     active ? "bg-gradient-purple/20 border-primary shadow-glow" : "glass"
                   }`}
                 >
-                  <TaskIconTile icon={t.icon} size={52} />
+                  <TaskIconTile icon={task.icon} size={52} />
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold truncate">{t.title}</p>
+                    <p className="font-semibold truncate">{task.title}</p>
                     <p className="text-xs text-muted-foreground">
-                      {formatDuration(t.duration_minutes)} · <span className="capitalize">{t.energy}</span> Energy
+                      {formatDuration(task.duration_minutes)} ·{" "}
+                      <span className="capitalize">{task.energy}</span> Energy
                     </p>
                   </div>
                   <button className="text-muted-foreground p-1" aria-label="More">
@@ -159,9 +171,9 @@ export default function Home() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Trophy className="h-4 w-4 text-accent" />
-              <p className="font-semibold text-sm">{tr(lang, "topPerformers")}</p>
+              <p className="font-semibold text-sm">{t("topPerformers")}</p>
             </div>
-            <span className="text-xs text-primary">{tr(lang, "viewAll")} ›</span>
+            <span className="text-xs text-primary">{t("viewAll")} ›</span>
           </div>
           <div className="flex items-center gap-3">
             {leaders.map((l: any, i: number) => (
@@ -174,10 +186,10 @@ export default function Home() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-semibold truncate">
-                    #{l.rank} {l.user_id === user?.id ? tr(lang, "you") : l.name}
+                    #{l.rank} {l.user_id === user?.id ? t("you") : l.name}
                   </p>
                   <p className="text-[10px] text-muted-foreground">
-                    {l.completed_week} {tr(lang, "thisWeek")}
+                    {l.completed_week} {t("thisWeek")}
                   </p>
                 </div>
               </div>
@@ -188,18 +200,18 @@ export default function Home() {
 
       <div className="grid grid-cols-2 gap-3">
         <div className="glass rounded-2xl p-4">
-          <p className="text-xs text-muted-foreground">{tr(lang, "progress")}</p>
+          <p className="text-xs text-muted-foreground">{t("progress")}</p>
           <p className="text-sm font-semibold mt-0.5">
-            {completed} {tr(lang, "ofCompleted")} {tasks.length} {tr(lang, "completed")}
+            {completed} {t("ofCompleted")} {tasks.length} {t("completed")}
           </p>
           <div className="mt-2 text-2xl font-bold text-primary">{progress}%</div>
         </div>
         <button onClick={() => navigate("/credibility")} className="glass rounded-2xl p-4 text-left">
-          <p className="text-xs text-muted-foreground">{tr(lang, "credibilityScore")}</p>
+          <p className="text-xs text-muted-foreground">{t("credibilityScore")}</p>
           <p className="text-2xl font-bold gradient-text mt-1">
             {cred ?? "--"} <span className="text-xs text-emerald-400">+6</span>
           </p>
-          <p className="text-[10px] text-muted-foreground mt-1">{tr(lang, "greatConsistency")}</p>
+          <p className="text-[10px] text-muted-foreground mt-1">{t("greatConsistency")}</p>
         </button>
       </div>
 
@@ -207,18 +219,19 @@ export default function Home() {
         onClick={() => navigate("/tasks")}
         className="w-full h-14 rounded-full bg-gradient-purple shadow-glow text-base"
       >
-        {tr(lang, "viewFullPlan")}
+        {t("viewFullPlan")}
       </Button>
     </main>
   );
 }
 
-function EmptyTasks({ onGenerate, lang }: { onGenerate: () => void; lang: Lang }) {
+function EmptyTasks({ onGenerate }: { onGenerate: () => void }) {
+  const { t } = useTranslation();
   return (
     <div className="glass rounded-2xl p-6 text-center space-y-3">
-      <p className="text-sm text-muted-foreground">{tr(lang, "noPlanYet")}</p>
+      <p className="text-sm text-muted-foreground">{t("noPlanYet")}</p>
       <Button onClick={onGenerate} className="bg-gradient-purple shadow-glow rounded-full px-6">
-        {tr(lang, "startNightCheckin")}
+        {t("startNightCheckin")}
       </Button>
     </div>
   );
