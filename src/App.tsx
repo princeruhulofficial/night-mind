@@ -23,6 +23,7 @@ import Reminder from "./pages/app/Reminder";
 import WeeklyDebrief from "./pages/app/WeeklyDebrief";
 import Profile from "./pages/app/Profile";
 import Leaderboard from "./pages/app/Leaderboard";
+import DesignPreview from "./pages/DesignPreview";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/design-preview" element={<DesignPreview />} />
 
                 {/* Onboarding (logged-in but not yet onboarded ok) */}
                 <Route element={<Protected requireOnboarded={false} />}>
