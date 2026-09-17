@@ -30,7 +30,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Sonner theme="dark" position="top-center" />
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <AuthProvider>
           <I18nProvider>
             <div className="mx-auto max-w-md min-h-screen relative">
